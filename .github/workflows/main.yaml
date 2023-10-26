@@ -1,16 +1,27 @@
-name: Basic deploy
+name: Deploy to AWS EC2
+# Run workflow on every push to main branch.
 on:
-  push:
-    branches: [ main ]
-
+push:
+branches: [main]
+# Your workflows jobs.
 jobs:
-  EC2-Deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - id: deploy
-        uses: bitovi/github-actions-deploy-docker-to-ec2@v0.5.8
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_default_region: us-east-1
-          dot_env: ${{ secrets.DOT_ENV }}
+build:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout
+uses: actions/checkout@v2
+- name: Build Docker image
+uses: bitrise-steplib/docker@v2
+with:
+dockerfile_name: Dockerfile
+docker_options: "--no-cache"
+image_tag: my-docker-image
+- name: Deploy Docker image to AWS EC2
+uses: aws-actions/aws-cli@v2
+with:
+aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+region: us-east-1
+service-name: my-service
+cluster-name: my-cluster
+image: my-docker-image
